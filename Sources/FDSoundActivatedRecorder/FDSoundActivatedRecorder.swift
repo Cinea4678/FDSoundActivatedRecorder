@@ -187,58 +187,58 @@ open class FDSoundActivatedRecorder: NSObject, AVAudioRecorderDelegate {
         recordingEndTime = CMTimeMake(value: Int64(timeSamples), timescale: Int32(savingSamplesPerSecond))
         audioRecorder.stop()
         
-        self.delegate?.soundActivatedRecorderDidFinishRecording(self, andSaved: audioRecorder.url)
+//        self.delegate?.soundActivatedRecorderDidFinishRecording(self, andSaved: audioRecorder.url)
         
-//        // Prepare output
-//        let trimmedAudioFileBaseName = "recordingConverted\(UUID().uuidString).caf"
-//        let trimmedAudioFileURL = NSURL.fileURL(withPathComponents: [NSTemporaryDirectory(), trimmedAudioFileBaseName])!
-//        if (trimmedAudioFileURL as NSURL).checkResourceIsReachableAndReturnError(nil) {
-//            let fileManager = FileManager.default
-//            _ = try? fileManager.removeItem(at: trimmedAudioFileURL)
-//        }
-//        
-//        // Create time ranges for trimming and fading
-//        let fadeInDoneTime = CMTimeAdd(recordingBeginTime, CMTimeMake(value: Int64(Double(riseTriggerIntervals) * Double(intervalSeconds) * Double(savingSamplesPerSecond)), timescale: Int32(savingSamplesPerSecond)))
-//        let fadeOutStartTime = CMTimeSubtract(recordingEndTime, CMTimeMake(value: Int64(Double(fallTriggerIntervals) * Double(intervalSeconds) * Double(savingSamplesPerSecond)), timescale: Int32(savingSamplesPerSecond)))
-//        let exportTimeRange = CMTimeRangeFromTimeToTime(start: recordingBeginTime, end: recordingEndTime)
-//        let fadeInTimeRange = CMTimeRangeFromTimeToTime(start: recordingBeginTime, end: fadeInDoneTime)
-//        let fadeOutTimeRange = CMTimeRangeFromTimeToTime(start: fadeOutStartTime, end: recordingEndTime)
-//        
-//        // Set up the AVMutableAudioMix which does fading
-//        let avAsset = AVAsset(url: self.audioRecorder.url)
-//        let tracks = avAsset.tracks(withMediaType: AVMediaType.audio)
-//        let track = tracks[0]
-//        let exportAudioMix = AVMutableAudioMix()
-//        let exportAudioMixInputParameters = AVMutableAudioMixInputParameters(track: track)
-//        exportAudioMixInputParameters.setVolumeRamp(fromStartVolume: 0.0, toEndVolume: 1.0, timeRange: fadeInTimeRange)
-//        exportAudioMixInputParameters.setVolumeRamp(fromStartVolume: 1.0, toEndVolume: 0.0, timeRange: fadeOutTimeRange)
-//        exportAudioMix.inputParameters = [exportAudioMixInputParameters]
-//        
-//        // Configure AVAssetExportSession which sets audio format
-//        let exportSession = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetAppleM4A)!
-//        exportSession.outputURL = trimmedAudioFileURL
-//        exportSession.outputFileType = AVFileType.m4a
-//        exportSession.timeRange = exportTimeRange
-//        exportSession.audioMix = exportAudioMix
-//        
-//        exportSession.exportAsynchronously {
-//            DispatchQueue.main.async {
-//                self.status = .inactive
-//                
-//                switch exportSession.status {
-//                case .completed:
-//                    self.delegate?.soundActivatedRecorderDidFinishRecording(self, andSaved: trimmedAudioFileURL)
-//                case .failed:
-//                    // a failure may happen because of an event out of your control
-//                    // for example, an interruption like a phone call coming in
-//                    // make sure to handle this case appropriately
-//                    // FIXME: add another delegate method for failing with exportSession.error
-//                    self.delegate?.soundActivatedRecorderDidAbort(self)
-//                default:
-//                    self.delegate?.soundActivatedRecorderDidAbort(self)
-//                }
-//            }
-//        }
+        // Prepare output
+        let trimmedAudioFileBaseName = "recordingConverted\(UUID().uuidString).caf"
+        let trimmedAudioFileURL = NSURL.fileURL(withPathComponents: [NSTemporaryDirectory(), trimmedAudioFileBaseName])!
+        if (trimmedAudioFileURL as NSURL).checkResourceIsReachableAndReturnError(nil) {
+            let fileManager = FileManager.default
+            _ = try? fileManager.removeItem(at: trimmedAudioFileURL)
+        }
+        
+        // Create time ranges for trimming and fading
+        let fadeInDoneTime = CMTimeAdd(recordingBeginTime, CMTimeMake(value: Int64(Double(riseTriggerIntervals) * Double(intervalSeconds) * Double(savingSamplesPerSecond)), timescale: Int32(savingSamplesPerSecond)))
+        let fadeOutStartTime = CMTimeSubtract(recordingEndTime, CMTimeMake(value: Int64(Double(fallTriggerIntervals) * Double(intervalSeconds) * Double(savingSamplesPerSecond)), timescale: Int32(savingSamplesPerSecond)))
+        let exportTimeRange = CMTimeRangeFromTimeToTime(start: recordingBeginTime, end: recordingEndTime)
+        let fadeInTimeRange = CMTimeRangeFromTimeToTime(start: recordingBeginTime, end: fadeInDoneTime)
+        let fadeOutTimeRange = CMTimeRangeFromTimeToTime(start: fadeOutStartTime, end: recordingEndTime)
+        
+        // Set up the AVMutableAudioMix which does fading
+        let avAsset = AVAsset(url: self.audioRecorder.url)
+        let tracks = avAsset.tracks(withMediaType: AVMediaType.audio)
+        let track = tracks[0]
+        let exportAudioMix = AVMutableAudioMix()
+        let exportAudioMixInputParameters = AVMutableAudioMixInputParameters(track: track)
+        exportAudioMixInputParameters.setVolumeRamp(fromStartVolume: 0.0, toEndVolume: 1.0, timeRange: fadeInTimeRange)
+        exportAudioMixInputParameters.setVolumeRamp(fromStartVolume: 1.0, toEndVolume: 0.0, timeRange: fadeOutTimeRange)
+        exportAudioMix.inputParameters = [exportAudioMixInputParameters]
+        
+        // Configure AVAssetExportSession which sets audio format
+        let exportSession = AVAssetExportSession(asset: avAsset, presetName: AVAssetExportPresetAppleM4A)!
+        exportSession.outputURL = trimmedAudioFileURL
+        exportSession.outputFileType = AVFileType.m4a
+        exportSession.timeRange = exportTimeRange
+        exportSession.audioMix = exportAudioMix
+        
+        exportSession.exportAsynchronously {
+            DispatchQueue.main.async {
+                self.status = .inactive
+                
+                switch exportSession.status {
+                case .completed:
+                    self.delegate?.soundActivatedRecorderDidFinishRecording(self, andSaved: trimmedAudioFileURL)
+                case .failed:
+                    // a failure may happen because of an event out of your control
+                    // for example, an interruption like a phone call coming in
+                    // make sure to handle this case appropriately
+                    // FIXME: add another delegate method for failing with exportSession.error
+                    self.delegate?.soundActivatedRecorderDidAbort(self)
+                default:
+                    self.delegate?.soundActivatedRecorderDidAbort(self)
+                }
+            }
+        }
     }
     
     /// End any recording or listening and discard any recorded files
